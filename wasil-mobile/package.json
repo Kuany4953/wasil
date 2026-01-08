@@ -1,0 +1,37 @@
+{
+  "name": "wasil-mobile",
+  "version": "1.0.0",
+  "description": "Wasil Mobile Apps - Rider & Driver applications for Juba, South Sudan",
+  "private": true,
+  "workspaces": [
+    "rider-app",
+    "driver-app",
+    "shared"
+  ],
+  "scripts": {
+    "rider:android": "cd rider-app && npm run android",
+    "rider:ios": "cd rider-app && npm run ios",
+    "rider:start": "cd rider-app && npm start",
+    "driver:android": "cd driver-app && npm run android",
+    "driver:ios": "cd driver-app && npm run ios",
+    "driver:start": "cd driver-app && npm start",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test": "jest",
+    "clean": "rm -rf node_modules && rm -rf rider-app/node_modules && rm -rf driver-app/node_modules"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.73.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-native": "^4.1.0",
+    "jest": "^29.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

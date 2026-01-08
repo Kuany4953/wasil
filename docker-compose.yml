@@ -1,0 +1,126 @@
+# Wasil - Docker Compose for Local Development
+# Runs all services together for testing
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: wasil-postgres
+    environment:
+      POSTGRES_DB: wasil
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Redis (OTP Storage)
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: wasil-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Auth Service (Backend)
+  # ==========================================
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: wasil-auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: wasil
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: wasil-jwt-secret-change-in-production
+      DEMO_MODE: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ==========================================
+  # Ride Service (Backend)
+  # ==========================================
+  ride-service:
+    build:
+      context: ./services/ride-service
+      dockerfile: Dockerfile
+    container_name: wasil-ride-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: wasil
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_URL: redis://redis:6379
+      MONGODB_URI: mongodb://mongo:27017/wasil
+      JWT_SECRET: wasil-jwt-secret-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ==========================================
+  # MongoDB (for location tracking)
+  # ==========================================
+  mongo:
+    image: mongo:6
+    container_name: wasil-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # ==========================================
+  # Wasil Web App (Frontend)
+  # ==========================================
+  web-app:
+    build:
+      context: ./wasil-mobile/WasilRiderTest
+      dockerfile: Dockerfile
+    container_name: wasil-web
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - ride-service
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:

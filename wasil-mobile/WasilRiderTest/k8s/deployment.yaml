@@ -1,0 +1,79 @@
+# Wasil Rider Web App - Kubernetes Deployment for GKE
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wasil-rider-web
+  labels:
+    app: wasil-rider-web
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wasil-rider-web
+  template:
+    metadata:
+      labels:
+        app: wasil-rider-web
+        version: v1
+    spec:
+      containers:
+      - name: wasil-rider-web
+        image: gcr.io/YOUR_PROJECT_ID/wasil-rider-web:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wasil-rider-web-service
+  labels:
+    app: wasil-rider-web
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: wasil-rider-web
+---
+# Optional: Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wasil-rider-web-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wasil-rider-web
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

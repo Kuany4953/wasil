@@ -1,0 +1,204 @@
+{
+  "common": {
+    "appName": "وصل",
+    "continue": "متابعة",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "done": "تم",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجاح",
+    "retry": "إعادة المحاولة",
+    "yes": "نعم",
+    "no": "لا",
+    "ok": "حسناً",
+    "search": "بحث",
+    "noResults": "لا توجد نتائج",
+    "seeAll": "عرض الكل"
+  },
+  
+  "auth": {
+    "welcome": "مرحباً بك في وصل",
+    "welcomeSubtitle": "خدمة النقل الموثوقة في جوبا",
+    "selectLanguage": "اختر لغتك",
+    "phoneNumber": "رقم الهاتف",
+    "enterPhone": "أدخل رقم هاتفك",
+    "phoneHint": "سنرسل لك رمز التحقق",
+    "sendOTP": "إرسال الرمز",
+    "enterOTP": "أدخل رمز التحقق",
+    "otpSent": "تم إرسال الرمز إلى {{phone}}",
+    "resendOTP": "إعادة إرسال الرمز",
+    "resendIn": "إعادة الإرسال بعد {{seconds}} ثانية",
+    "verifyOTP": "تحقق",
+    "invalidOTP": "رمز التحقق غير صحيح",
+    "profileSetup": "إعداد الملف الشخصي",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "email": "البريد الإلكتروني (اختياري)",
+    "completeSetup": "إكمال الإعداد",
+    "logout": "تسجيل الخروج",
+    "logoutConfirm": "هل أنت متأكد من تسجيل الخروج؟"
+  },
+  
+  "home": {
+    "whereToGo": "إلى أين تريد الذهاب؟",
+    "searchDestination": "ابحث عن وجهتك",
+    "recentPlaces": "الأماكن الأخيرة",
+    "savedPlaces": "الأماكن المحفوظة",
+    "home": "المنزل",
+    "work": "العمل",
+    "setHome": "تحديد المنزل",
+    "setWork": "تحديد العمل",
+    "landmarks": "الأماكن الشهيرة",
+    "currentLocation": "الموقع الحالي",
+    "setPickup": "تحديد موقع الركوب",
+    "setDropoff": "تحديد موقع النزول"
+  },
+  
+  "ride": {
+    "requestRide": "طلب رحلة",
+    "confirmRide": "تأكيد الرحلة",
+    "findingDriver": "جاري البحث عن سائق...",
+    "noDrivers": "لا يوجد سائقين بالقرب منك",
+    "tryAgain": "حاول مرة أخرى",
+    "driverFound": "تم العثور على سائق!",
+    "driverArriving": "السائق في الطريق",
+    "driverArrived": "وصل السائق",
+    "rideInProgress": "الرحلة جارية",
+    "rideCompleted": "اكتملت الرحلة",
+    "rideCancelled": "تم إلغاء الرحلة",
+    
+    "pickup": "الركوب",
+    "dropoff": "النزول",
+    "estimatedFare": "الأجرة التقديرية",
+    "finalFare": "الأجرة النهائية",
+    "distance": "المسافة",
+    "duration": "المدة",
+    "eta": "الوقت المتوقع",
+    
+    "rideTypes": {
+      "boda_boda": "بودا بودا",
+      "boda_boda_desc": "دراجة نارية - سريعة وبأسعار معقولة",
+      "standard": "سيارة عادية",
+      "standard_desc": "سيارة سيدان مريحة",
+      "premium": "فاخرة",
+      "premium_desc": "سيارة فاخرة مع تكييف"
+    },
+    
+    "cancelRide": "إلغاء الرحلة",
+    "cancelConfirm": "هل أنت متأكد من الإلغاء؟",
+    "cancellationFee": "سيتم تطبيق رسوم إلغاء بقيمة {{fee}} جنيه",
+    "selectReason": "اختر سبب الإلغاء",
+    "cancelReasons": {
+      "changed_my_mind": "غيرت رأيي",
+      "driver_too_far": "السائق بعيد جداً",
+      "found_other_ride": "وجدت رحلة أخرى",
+      "driver_not_responding": "السائق لا يرد",
+      "incorrect_pickup": "موقع الركوب غير صحيح",
+      "safety_concern": "مخاوف أمنية",
+      "other": "سبب آخر"
+    }
+  },
+  
+  "driver": {
+    "name": "السائق",
+    "rating": "التقييم",
+    "vehicle": "السيارة",
+    "licensePlate": "رقم اللوحة",
+    "callDriver": "اتصل بالسائق",
+    "messageDriver": "راسل السائق",
+    "arrivedInMinutes": "يصل خلال {{minutes}} دقيقة",
+    "waitingTime": "وقت الانتظار",
+    "yourRating": "قيّم السائق"
+  },
+  
+  "payment": {
+    "paymentMethod": "طريقة الدفع",
+    "selectPayment": "اختر طريقة الدفع",
+    "cash": "نقداً",
+    "mtnMoney": "MTN موبايل موني",
+    "zainCash": "زين كاش",
+    "card": "بطاقة ائتمان/خصم",
+    "addCard": "إضافة بطاقة",
+    "fare": "الأجرة",
+    "bookingFee": "رسوم الحجز",
+    "nightFee": "رسوم الأمان الليلي",
+    "tip": "بقشيش",
+    "addTip": "أضف بقشيش للسائق",
+    "total": "المجموع",
+    "payNow": "ادفع الآن",
+    "cashPayment": "ادفع {{amount}} جنيه للسائق"
+  },
+  
+  "rating": {
+    "rateYourRide": "قيّم رحلتك",
+    "howWasRide": "كيف كانت رحلتك؟",
+    "addFeedback": "أضف تعليق (اختياري)",
+    "feedbackPlaceholder": "أخبرنا عن تجربتك...",
+    "submit": "إرسال التقييم",
+    "thankYou": "شكراً لك على تقييمك!",
+    "star": "نجمة واحدة",
+    "stars": "{{count}} نجوم"
+  },
+  
+  "history": {
+    "rideHistory": "سجل الرحلات",
+    "noRides": "لا توجد رحلات بعد",
+    "viewReceipt": "عرض الإيصال",
+    "rebook": "إعادة الحجز",
+    "completed": "مكتملة",
+    "cancelled": "ملغاة"
+  },
+  
+  "profile": {
+    "myProfile": "ملفي الشخصي",
+    "editProfile": "تعديل الملف",
+    "paymentMethods": "طرق الدفع",
+    "savedPlaces": "الأماكن المحفوظة",
+    "emergencyContacts": "جهات اتصال الطوارئ",
+    "language": "اللغة",
+    "notifications": "الإشعارات",
+    "help": "المساعدة والدعم",
+    "about": "عن وصل",
+    "termsOfService": "شروط الخدمة",
+    "privacyPolicy": "سياسة الخصوصية",
+    "deleteAccount": "حذف الحساب"
+  },
+  
+  "safety": {
+    "safety": "الأمان",
+    "shareRide": "مشاركة الرحلة",
+    "shareRideWith": "شارك رحلتك مع",
+    "emergencyContacts": "جهات اتصال الطوارئ",
+    "addContact": "إضافة جهة اتصال طوارئ",
+    "sosButton": "طوارئ",
+    "sosConfirm": "إرسال تنبيه طوارئ؟",
+    "sosMessage": "سيتم إبلاغ خدمات الطوارئ وجهات الاتصال الخاصة بك",
+    "callPolice": "اتصل بالشرطة (777)",
+    "callAmbulance": "اتصل بالإسعاف (997)"
+  },
+  
+  "errors": {
+    "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك بالإنترنت.",
+    "locationError": "تعذر الحصول على موقعك. يرجى تفعيل GPS.",
+    "serverError": "خطأ في الخادم. يرجى المحاولة لاحقاً.",
+    "authError": "فشل التحقق. يرجى تسجيل الدخول مرة أخرى.",
+    "noDriversError": "لا يوجد سائقين في منطقتك.",
+    "rideNotFound": "الرحلة غير موجودة.",
+    "paymentFailed": "فشل الدفع. يرجى المحاولة مرة أخرى."
+  },
+  
+  "notifications": {
+    "rideAccepted": "السائق في الطريق إليك!",
+    "driverArriving": "السائق على بعد {{minutes}} دقيقة",
+    "driverArrived": "وصل السائق!",
+    "rideStarted": "بدأت رحلتك",
+    "rideCompleted": "اكتملت الرحلة. الأجرة: {{fare}} جنيه",
+    "rideCancelled": "تم إلغاء رحلتك"
+  }
+}
