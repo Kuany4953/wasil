@@ -1,11 +1,27 @@
 /**
  * Wasil Shared - MapView Component
  * Wrapper around react-native-maps with Juba defaults
+ * Uber-like visual polish without affecting behavior or API
  */
 
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Platform, ActivityIndicator, Text } from 'react-native';
-import MapViewRN, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import React, {
+  forwardRef,
+  useEffect,
+  useRef,
+  useState,
+  useImperativeHandle,
+} from 'react';
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Text,
+} from 'react-native';
+import MapViewRN, {
+  Marker,
+  Polyline,
+  PROVIDER_GOOGLE,
+} from 'react-native-maps';
 import { colors } from '../theme';
 
 // Juba, South Sudan center coordinates
@@ -16,223 +32,241 @@ const JUBA_CENTER = {
   longitudeDelta: 0.0421,
 };
 
-// Custom map style for a clean look
+// Uber-like clean light map style
 const mapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
   {
-    featureType: 'poi',
-    elementType: 'labels',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#616161' }],
+  },
+  {
+    elementType: 'labels.text.stroke',
+    stylers: [{ color: '#f5f5f5' }],
+  },
+  {
+    featureType: 'administrative',
     stylers: [{ visibility: 'off' }],
   },
   {
-    featureType: 'transit',
-    elementType: 'labels',
+    featureType: 'poi',
     stylers: [{ visibility: 'off' }],
   },
   {
     featureType: 'road',
-    elementType: 'labels.icon',
+    elementType: 'geometry',
+    stylers: [{ color: '#ffffff' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#e0e0e0' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#dadada' }],
+  },
+  {
+    featureType: 'transit',
     stylers: [{ visibility: 'off' }],
   },
   {
-    featureType: 'administrative.neighborhood',
-    stylers: [{ visibility: 'off' }],
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#c9e6ff' }],
   },
 ];
 
-const MapView = forwardRef(({
-  style,
-  initialRegion = JUBA_CENTER,
-  showsUserLocation = true,
-  showsMyLocationButton = false,
-  showsCompass = false,
-  showsTraffic = false,
-  zoomEnabled = true,
-  scrollEnabled = true,
-  rotateEnabled = true,
-  pitchEnabled = false,
-  onRegionChange,
-  onRegionChangeComplete,
-  onMapReady,
-  onPress,
-  onLongPress,
-  onMarkerPress,
-  markers = [],
-  driverMarkers = [],
-  routeCoordinates = [],
-  pickupLocation,
-  dropoffLocation,
-  userLocation,
-  children,
-  ...props
-}, ref) => {
-  const mapRef = useRef(null);
-  const [isMapReady, setIsMapReady] = useState(false);
-
-  // Expose methods via ref
-  React.useImperativeHandle(ref, () => ({
-    animateToRegion: (region, duration = 500) => {
-      mapRef.current?.animateToRegion(region, duration);
+const MapView = forwardRef(
+  (
+    {
+      style,
+      initialRegion = JUBA_CENTER,
+      showsUserLocation = true,
+      showsMyLocationButton = false,
+      showsCompass = false,
+      showsTraffic = false,
+      zoomEnabled = true,
+      scrollEnabled = true,
+      rotateEnabled = true,
+      pitchEnabled = false,
+      onRegionChange,
+      onRegionChangeComplete,
+      onMapReady,
+      onPress,
+      onLongPress,
+      onMarkerPress,
+      markers = [],
+      driverMarkers = [],
+      routeCoordinates = [],
+      pickupLocation,
+      dropoffLocation,
+      userLocation,
+      children,
+      ...props
     },
-    animateToCoordinate: (coordinate, duration = 500) => {
-      mapRef.current?.animateCamera({
-        center: coordinate,
-        duration,
-      });
-    },
-    fitToCoordinates: (coordinates, options = {}) => {
-      mapRef.current?.fitToCoordinates(coordinates, {
-        edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
-        animated: true,
-        ...options,
-      });
-    },
-    getCamera: () => mapRef.current?.getCamera(),
-    setCamera: (camera) => mapRef.current?.setCamera(camera),
-  }));
+    ref
+  ) => {
+    const mapRef = useRef(null);
+    const [isMapReady, setIsMapReady] = useState(false);
 
-  // Auto-fit to markers when they change
-  useEffect(() => {
-    if (isMapReady && pickupLocation && dropoffLocation) {
-      const coordinates = [
-        { latitude: pickupLocation.latitude, longitude: pickupLocation.longitude },
-        { latitude: dropoffLocation.latitude, longitude: dropoffLocation.longitude },
-      ];
-      mapRef.current?.fitToCoordinates(coordinates, {
-        edgePadding: { top: 100, right: 50, bottom: 250, left: 50 },
-        animated: true,
-      });
-    }
-  }, [isMapReady, pickupLocation, dropoffLocation]);
+    // Expose map methods
+    useImperativeHandle(ref, () => ({
+      animateToRegion: (region, duration = 500) => {
+        mapRef.current?.animateToRegion(region, duration);
+      },
+      animateToCoordinate: (coordinate, duration = 500) => {
+        mapRef.current?.animateCamera({
+          center: coordinate,
+          duration,
+        });
+      },
+      fitToCoordinates: (coordinates, options = {}) => {
+        mapRef.current?.fitToCoordinates(coordinates, {
+          edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
+          animated: true,
+          ...options,
+        });
+      },
+      getCamera: () => mapRef.current?.getCamera(),
+      setCamera: (camera) => mapRef.current?.setCamera(camera),
+    }));
 
-  const handleMapReady = () => {
-    setIsMapReady(true);
-    onMapReady?.();
-  };
+    // Auto-fit pickup & dropoff
+    useEffect(() => {
+      if (isMapReady && pickupLocation && dropoffLocation) {
+        mapRef.current?.fitToCoordinates(
+          [
+            pickupLocation,
+            dropoffLocation,
+          ],
+          {
+            edgePadding: { top: 100, right: 50, bottom: 250, left: 50 },
+            animated: true,
+          }
+        );
+      }
+    }, [isMapReady, pickupLocation, dropoffLocation]);
 
-  return (
-    <View style={[styles.container, style]}>
-      <MapViewRN
-        ref={mapRef}
-        style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        initialRegion={initialRegion}
-        showsUserLocation={showsUserLocation}
-        showsMyLocationButton={showsMyLocationButton}
-        showsCompass={showsCompass}
-        showsTraffic={showsTraffic}
-        zoomEnabled={zoomEnabled}
-        scrollEnabled={scrollEnabled}
-        rotateEnabled={rotateEnabled}
-        pitchEnabled={pitchEnabled}
-        customMapStyle={mapStyle}
-        onRegionChange={onRegionChange}
-        onRegionChangeComplete={onRegionChangeComplete}
-        onMapReady={handleMapReady}
-        onPress={onPress}
-        onLongPress={onLongPress}
-        {...props}
-      >
-        {/* Pickup Marker */}
-        {pickupLocation && (
-          <Marker
-            coordinate={{
-              latitude: pickupLocation.latitude,
-              longitude: pickupLocation.longitude,
-            }}
-            title={pickupLocation.title || 'Pickup'}
-            description={pickupLocation.address}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <View style={styles.pickupMarker}>
-              <View style={styles.pickupDot} />
-            </View>
-          </Marker>
-        )}
+    const handleMapReady = () => {
+      setIsMapReady(true);
+      onMapReady?.();
+    };
 
-        {/* Dropoff Marker */}
-        {dropoffLocation && (
-          <Marker
-            coordinate={{
-              latitude: dropoffLocation.latitude,
-              longitude: dropoffLocation.longitude,
-            }}
-            title={dropoffLocation.title || 'Dropoff'}
-            description={dropoffLocation.address}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <View style={styles.dropoffMarker}>
+    return (
+      <View style={[styles.container, style]}>
+        <MapViewRN
+          ref={mapRef}
+          style={styles.map}
+          provider={PROVIDER_GOOGLE}
+          initialRegion={initialRegion}
+          showsUserLocation={showsUserLocation}
+          showsMyLocationButton={showsMyLocationButton}
+          showsCompass={showsCompass}
+          showsTraffic={showsTraffic}
+          zoomEnabled={zoomEnabled}
+          scrollEnabled={scrollEnabled}
+          rotateEnabled={rotateEnabled}
+          pitchEnabled={pitchEnabled}
+          customMapStyle={mapStyle}
+          onRegionChange={onRegionChange}
+          onRegionChangeComplete={onRegionChangeComplete}
+          onMapReady={handleMapReady}
+          onPress={onPress}
+          onLongPress={onLongPress}
+          {...props}
+        >
+          {/* Pickup */}
+          {pickupLocation && (
+            <Marker
+              coordinate={pickupLocation}
+              anchor={{ x: 0.5, y: 1 }}
+            >
+              <View style={styles.pickupMarker}>
+                <View style={styles.pickupDot} />
+              </View>
+            </Marker>
+          )}
+
+          {/* Dropoff */}
+          {dropoffLocation && (
+            <Marker
+              coordinate={dropoffLocation}
+              anchor={{ x: 0.5, y: 1 }}
+            >
               <View style={styles.dropoffPin}>
                 <Text style={styles.dropoffIcon}>📍</Text>
               </View>
-            </View>
-          </Marker>
-        )}
+            </Marker>
+          )}
 
-        {/* Route Polyline */}
-        {routeCoordinates.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor={colors.primary}
-            strokeWidth={4}
-            lineDashPattern={[0]}
-          />
-        )}
+          {/* Route (Uber-style layered line) */}
+          {routeCoordinates.length > 0 && (
+            <>
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="rgba(0,0,0,0.15)"
+                strokeWidth={8}
+                lineCap="round"
+                lineJoin="round"
+              />
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor={colors.primary}
+                strokeWidth={5}
+                lineCap="round"
+                lineJoin="round"
+              />
+            </>
+          )}
 
-        {/* Driver Markers */}
-        {driverMarkers.map((driver, index) => (
-          <Marker
-            key={driver.id || index}
-            coordinate={{
-              latitude: driver.latitude,
-              longitude: driver.longitude,
-            }}
-            title={driver.name}
-            rotation={driver.heading || 0}
-            flat
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View style={styles.driverMarker}>
-              <Text style={styles.carIcon}>🚗</Text>
-            </View>
-          </Marker>
-        ))}
-
-        {/* Custom Markers */}
-        {markers.map((marker, index) => (
-          <Marker
-            key={marker.id || index}
-            coordinate={{
-              latitude: marker.latitude,
-              longitude: marker.longitude,
-            }}
-            title={marker.title}
-            description={marker.description}
-            onPress={() => onMarkerPress?.(marker)}
-          >
-            {marker.customView || (
-              <View style={styles.customMarker}>
-                <Text>{marker.icon || '📍'}</Text>
+          {/* Drivers */}
+          {driverMarkers.map((driver, index) => (
+            <Marker
+              key={driver.id || index}
+              coordinate={driver}
+              rotation={driver.heading || 0}
+              flat
+            >
+              <View style={styles.driverMarker}>
+                <Text style={styles.carIcon}>🚗</Text>
               </View>
-            )}
-          </Marker>
-        ))}
+            </Marker>
+          ))}
 
-        {children}
-      </MapViewRN>
+          {/* Custom markers */}
+          {markers.map((marker, index) => (
+            <Marker
+              key={marker.id || index}
+              coordinate={marker}
+              onPress={() => onMarkerPress?.(marker)}
+            >
+              {marker.customView || (
+                <View style={styles.customMarker}>
+                  <Text>{marker.icon || '📍'}</Text>
+                </View>
+              )}
+            </Marker>
+          ))}
 
-      {/* Loading Overlay */}
-      {!isMapReady && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      )}
-    </View>
-  );
-});
+          {children}
+        </MapViewRN>
+
+        {!isMapReady && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        )}
+      </View>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
     overflow: 'hidden',
   },
   map: {
@@ -240,71 +274,70 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
-  // Pickup Marker
+
   pickupMarker: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   pickupDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: colors.primary,
-    borderWidth: 3,
-    borderColor: colors.white,
+    borderWidth: 4,
+    borderColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  
-  // Dropoff Marker
-  dropoffMarker: {
-    alignItems: 'center',
-  },
+
   dropoffPin: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 7,
   },
   dropoffIcon: {
-    fontSize: 32,
+    fontSize: 22,
+    color: '#fff',
   },
-  
-  // Driver Marker
+
   driverMarker: {
-    width: 40,
-    height: 40,
-    backgroundColor: colors.white,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
   },
   carIcon: {
-    fontSize: 24,
+    fontSize: 20,
   },
-  
-  // Custom Marker
+
   customMarker: {
     padding: 4,
   },
 });
 
-// Export constants for use in other components
+// Export constants
 export const JUBA_REGION = JUBA_CENTER;
 
 export default MapView;
