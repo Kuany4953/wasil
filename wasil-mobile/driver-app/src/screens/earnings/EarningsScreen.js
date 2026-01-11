@@ -1,6 +1,7 @@
+
 /**
  * Wasil Driver - Earnings Dashboard Screen
- * Beautiful earnings visualization with charts
+ 
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -126,19 +127,26 @@ const EarningsScreen = ({ navigation }) => {
       onPress={() => navigation.navigate('RideDetail', { ride: item })}
     >
       <View style={styles.rideLeft}>
-        <View style={styles.rideIcon}>
-          <Text style={styles.rideEmoji}>🚗</Text>
+        <View style={styles.rideIconContainer}>
+          <View style={styles.locationDot} />
+          <View style={styles.locationLine} />
+          <View style={[styles.locationDot, styles.locationDotEnd]} />
         </View>
         <View style={styles.rideInfo}>
           <Text style={styles.rideRoute} numberOfLines={1}>
-            {item.pickup?.address || 'Konyo Konyo'} → {item.dropoff?.address || 'Airport'}
+            {item.pickup?.address || 'Konyo Konyo Market'}
+          </Text>
+          <Text style={styles.rideDestination} numberOfLines={1}>
+            {item.dropoff?.address || 'Airport'}
           </Text>
           <Text style={styles.rideTime}>
             {item.completedAt || 'Today, 2:30 PM'} • {item.distance?.toFixed(1) || '5.2'} km
           </Text>
         </View>
       </View>
-      <Text style={styles.rideFare}>{formatCurrency(item.fare || item.driverEarnings || 2500)}</Text>
+      <View style={styles.rideRight}>
+        <Text style={styles.rideFare}>{formatCurrency(item.fare || item.driverEarnings || 2500)}</Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -155,9 +163,7 @@ const EarningsScreen = ({ navigation }) => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('earnings.title')}</Text>
-        <TouchableOpacity style={styles.historyButton}>
-          <Text style={styles.historyIcon}>📊</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight} />
       </View>
 
       <ScrollView
@@ -208,13 +214,14 @@ const EarningsScreen = ({ navigation }) => {
             {selectedPeriod === 'today' && (
               <View style={styles.earningsStats}>
                 <View style={styles.statBadge}>
-                  <Text style={styles.statBadgeText}>
-                    🚗 {todayRides || 0} {t('earnings.rides')}
-                  </Text>
+                  <Text style={styles.statBadgeLabel}>Trips</Text>
+                  <Text style={styles.statBadgeValue}>{todayRides || 0}</Text>
                 </View>
+                <View style={styles.statDivider} />
                 <View style={styles.statBadge}>
-                  <Text style={styles.statBadgeText}>
-                    💰 {formatCurrency((todayEarnings || 0) / Math.max(todayRides || 1, 1))}/ride
+                  <Text style={styles.statBadgeLabel}>Per Trip</Text>
+                  <Text style={styles.statBadgeValue}>
+                    {formatCurrency((todayEarnings || 0) / Math.max(todayRides || 1, 1))}
                   </Text>
                 </View>
               </View>
@@ -223,19 +230,26 @@ const EarningsScreen = ({ navigation }) => {
 
           {/* Cashout Button */}
           <TouchableOpacity style={styles.cashoutButton}>
-            <Text style={styles.cashoutIcon}>💳</Text>
+            <View style={styles.cashoutIconContainer}>
+              <View style={styles.cardIcon} />
+            </View>
             <Text style={styles.cashoutText}>{t('earnings.cashout')}</Text>
+            <Text style={styles.cashoutArrow}>→</Text>
           </TouchableOpacity>
         </Animated.View>
 
         {/* Weekly Chart */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>{t('earnings.weeklyOverview')}</Text>
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>{t('earnings.weeklyOverview')}</Text>
+            <Text style={styles.chartSubtitle}>Last 7 days</Text>
+          </View>
           
           <View style={styles.chartContainer}>
             {weeklyData.map((data, index) => {
               const maxEarning = getMaxEarning();
               const heightPercent = (data.earnings / maxEarning) * 100;
+              const isToday = index === new Date().getDay() - 1;
               
               return (
                 <View key={data.day} style={styles.chartBar}>
@@ -248,16 +262,15 @@ const EarningsScreen = ({ navigation }) => {
                             inputRange: [0, 1],
                             outputRange: ['0%', `${heightPercent}%`],
                           }),
-                          backgroundColor: index === new Date().getDay() - 1
-                            ? colors.primary
-                            : colors.primary + '60',
+                          backgroundColor: isToday ? colors.primary : colors.primary + '40',
                         },
                       ]}
-                    />
+                    >
+                      {isToday && <View style={styles.barIndicator} />}
+                    </Animated.View>
                   </View>
-                  <Text style={styles.barLabel}>{data.day}</Text>
-                  <Text style={styles.barValue}>
-                    {(data.earnings / 1000).toFixed(0)}k
+                  <Text style={[styles.barLabel, isToday && styles.barLabelActive]}>
+                    {data.day}
                   </Text>
                 </View>
               );
@@ -268,17 +281,23 @@ const EarningsScreen = ({ navigation }) => {
         {/* Quick Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statIcon}>⏱️</Text>
-            <Text style={styles.statValue}>6.5 hrs</Text>
+            <View style={styles.statIconContainer}>
+              <View style={styles.clockIcon} />
+            </View>
+            <Text style={styles.statValue}>6.5</Text>
             <Text style={styles.statLabel}>{t('earnings.hoursOnline')}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statIcon}>📍</Text>
-            <Text style={styles.statValue}>45 km</Text>
+            <View style={styles.statIconContainer}>
+              <View style={styles.distanceIcon} />
+            </View>
+            <Text style={styles.statValue}>45</Text>
             <Text style={styles.statLabel}>{t('earnings.distanceCovered')}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statIcon}>⭐</Text>
+            <View style={styles.statIconContainer}>
+              <View style={styles.starIcon} />
+            </View>
             <Text style={styles.statValue}>4.92</Text>
             <Text style={styles.statLabel}>{t('earnings.rating')}</Text>
           </View>
@@ -307,26 +326,36 @@ const EarningsScreen = ({ navigation }) => {
 
         {/* Tips & Insights */}
         <View style={styles.insightsCard}>
-          <Text style={styles.insightsTitle}>💡 {t('earnings.insights')}</Text>
+          <View style={styles.insightsHeader}>
+            <View style={styles.insightBulb} />
+            <Text style={styles.insightsTitle}>{t('earnings.insights')}</Text>
+          </View>
           
           <View style={styles.insightItem}>
-            <View style={styles.insightBadge}>
-              <Text style={styles.insightBadgeText}>⬆️ 15%</Text>
+            <View style={styles.insightIndicator}>
+              <View style={styles.trendUpIcon} />
+              <Text style={styles.insightPercentage}>15%</Text>
             </View>
             <Text style={styles.insightText}>
               {t('earnings.insightHigher')}
             </Text>
           </View>
           
+          <View style={styles.insightDivider} />
+          
           <View style={styles.insightItem}>
-            <View style={[styles.insightBadge, { backgroundColor: colors.secondary + '20' }]}>
-              <Text style={[styles.insightBadgeText, { color: colors.secondary }]}>🔥</Text>
+            <View style={[styles.insightIndicator, { backgroundColor: colors.warning + '15' }]}>
+              <View style={styles.fireIcon} />
+              <Text style={[styles.insightPercentage, { color: colors.warning }]}>Peak</Text>
             </View>
             <Text style={styles.insightText}>
               {t('earnings.insightPeakHours')}
             </Text>
           </View>
         </View>
+
+        {/* Bottom spacing */}
+        <View style={{ height: spacing.xl }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -339,7 +368,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F8F9FA',
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
     marginTop: -20,
@@ -363,59 +392,55 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.white + '20',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   backIcon: {
     fontSize: 22,
     color: colors.white,
+    fontWeight: '600',
   },
   headerTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: '700',
     color: colors.white,
+    letterSpacing: -0.5,
   },
-  historyButton: {
+  headerRight: {
     width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  historyIcon: {
-    fontSize: 18,
   },
 
   // Main Card
   mainCard: {
     backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    borderRadius: borderRadius['2xl'],
+    padding: spacing.xl,
     marginBottom: spacing.lg,
-    ...shadows.md,
+    ...shadows.lg,
+    elevation: 8,
   },
   periodTabs: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xs,
-    marginBottom: spacing.lg,
+    backgroundColor: '#F5F6F7',
+    borderRadius: borderRadius.xl,
+    padding: 4,
+    marginBottom: spacing.xl,
   },
   periodTab: {
     flex: 1,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
   },
   periodTabActive: {
     backgroundColor: colors.primary,
+    ...shadows.sm,
   },
   periodTabText: {
     fontSize: typography.fontSize.md,
-    color: colors.textLight,
-    fontWeight: typography.fontWeight.medium,
+    color: '#6B7280',
+    fontWeight: '600',
   },
   periodTabTextActive: {
     color: colors.white,
@@ -424,32 +449,50 @@ const styles = StyleSheet.create({
   // Earnings
   earningsContainer: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   earningsLabel: {
-    fontSize: typography.fontSize.md,
-    color: colors.textLight,
-    marginBottom: spacing.xs,
+    fontSize: typography.fontSize.sm,
+    color: '#6B7280',
+    marginBottom: spacing.sm,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   earningsAmount: {
-    fontSize: 42,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
-    marginBottom: spacing.md,
+    fontSize: 48,
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: spacing.lg,
+    letterSpacing: -1,
   },
   earningsStats: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.xl,
   },
   statBadge: {
-    backgroundColor: colors.surface,
+    alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    marginHorizontal: spacing.xs,
   },
-  statBadgeText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textLight,
+  statBadgeLabel: {
+    fontSize: typography.fontSize.xs,
+    color: '#9CA3AF',
+    marginBottom: 2,
+    fontWeight: '500',
+  },
+  statBadgeValue: {
+    fontSize: typography.fontSize.md,
+    color: '#374151',
+    fontWeight: '700',
+  },
+  statDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#E5E7EB',
   },
 
   // Cashout
@@ -458,38 +501,63 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
-    paddingVertical: spacing.base,
-    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.xl,
+    ...shadows.md,
   },
-  cashoutIcon: {
-    fontSize: 20,
+  cashoutIconContainer: {
     marginRight: spacing.sm,
+  },
+  cardIcon: {
+    width: 20,
+    height: 14,
+    backgroundColor: colors.white,
+    borderRadius: 2,
+    borderWidth: 1.5,
+    borderColor: colors.white,
   },
   cashoutText: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: '700',
     color: colors.white,
+    letterSpacing: 0.3,
+  },
+  cashoutArrow: {
+    fontSize: 18,
+    color: colors.white,
+    marginLeft: spacing.sm,
+    fontWeight: '600',
   },
 
   // Chart
   chartCard: {
     backgroundColor: colors.white,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    borderRadius: borderRadius['2xl'],
+    padding: spacing.xl,
     marginBottom: spacing.lg,
-    ...shadows.sm,
+    ...shadows.md,
+    elevation: 4,
+  },
+  chartHeader: {
+    marginBottom: spacing.lg,
   },
   chartTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
-    marginBottom: spacing.lg,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: spacing.xs,
+  },
+  chartSubtitle: {
+    fontSize: typography.fontSize.sm,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
   chartContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    height: 150,
-    paddingTop: spacing.lg,
+    height: 160,
+    paddingTop: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
   chartBar: {
     alignItems: 'center',
@@ -497,25 +565,37 @@ const styles = StyleSheet.create({
   },
   barContainer: {
     flex: 1,
-    width: 28,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    width: 32,
+    backgroundColor: '#F3F4F6',
+    borderRadius: borderRadius.lg,
     justifyContent: 'flex-end',
     overflow: 'hidden',
   },
   barFill: {
     width: '100%',
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
+    position: 'relative',
+  },
+  barIndicator: {
+    position: 'absolute',
+    top: -4,
+    left: '50%',
+    marginLeft: -4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   barLabel: {
     fontSize: typography.fontSize.xs,
-    color: colors.textLight,
+    color: '#9CA3AF',
     marginTop: spacing.sm,
+    fontWeight: '600',
   },
-  barValue: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
+  barLabelActive: {
+    color: colors.primary,
   },
 
   // Stats Row
@@ -527,26 +607,61 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
     alignItems: 'center',
     marginHorizontal: spacing.xs,
     ...shadows.sm,
+    elevation: 2,
   },
-  statIcon: {
-    fontSize: 24,
-    marginBottom: spacing.sm,
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  clockIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    position: 'relative',
+  },
+  distanceIcon: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+  },
+  starIcon: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderBottomWidth: 18,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#FCD34D',
+    transform: [{ rotate: '35deg' }],
   },
   statValue: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: typography.fontSize.xs,
-    color: colors.textLight,
+    color: '#6B7280',
     textAlign: 'center',
-    marginTop: spacing.xs,
+    fontWeight: '500',
   },
 
   // Rides Section
@@ -558,98 +673,159 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
   ridesTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#111827',
   },
   viewAllText: {
     fontSize: typography.fontSize.md,
     color: colors.primary,
-    fontWeight: typography.fontWeight.medium,
+    fontWeight: '600',
   },
   rideItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
     marginBottom: spacing.sm,
     ...shadows.sm,
+    elevation: 2,
   },
   rideLeft: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flex: 1,
-  },
-  rideIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
     marginRight: spacing.md,
   },
-  rideEmoji: {
-    fontSize: 18,
+  rideIconContainer: {
+    width: 24,
+    alignItems: 'center',
+    marginRight: spacing.md,
+    paddingTop: 2,
+  },
+  locationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  locationLine: {
+    width: 2,
+    height: 24,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 2,
+  },
+  locationDotEnd: {
+    backgroundColor: '#10B981',
   },
   rideInfo: {
     flex: 1,
   },
   rideRoute: {
     fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  rideDestination: {
+    fontSize: typography.fontSize.md,
+    fontWeight: '600',
+    color: '#6B7280',
     marginBottom: spacing.xs,
   },
   rideTime: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  rideRight: {
+    alignItems: 'flex-end',
   },
   rideFare: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.bold,
+    fontWeight: '700',
     color: colors.primary,
   },
 
   // Insights
   insightsCard: {
-    backgroundColor: colors.primary + '10',
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    backgroundColor: '#EFF6FF',
+    borderRadius: borderRadius['2xl'],
+    padding: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.primary + '20',
+    borderColor: '#DBEAFE',
+  },
+  insightsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  insightBulb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FCD34D',
+    marginRight: spacing.sm,
   },
   insightsTitle: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.primary,
-    marginBottom: spacing.md,
+    fontWeight: '700',
+    color: '#1E40AF',
   },
   insightItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
   },
-  insightBadge: {
-    backgroundColor: colors.success + '20',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.md,
+  insightIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
     marginRight: spacing.md,
   },
-  insightBadgeText: {
+  trendUpIcon: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#10B981',
+    marginRight: 4,
+  },
+  fireIcon: {
+    width: 10,
+    height: 14,
+    backgroundColor: '#F59E0B',
+    borderRadius: 6,
+    marginRight: 4,
+  },
+  insightPercentage: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.success,
+    fontWeight: '700',
+    color: '#10B981',
   },
   insightText: {
     flex: 1,
     fontSize: typography.fontSize.md,
-    color: colors.text,
+    color: '#374151',
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  insightDivider: {
+    height: 1,
+    backgroundColor: '#DBEAFE',
+    marginVertical: spacing.md,
   },
 });
 
