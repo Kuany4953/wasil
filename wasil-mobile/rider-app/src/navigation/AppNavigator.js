@@ -1,6 +1,6 @@
 /**
  * Wasil Rider - App Navigator
- * Main navigation configuration
+ * Main navigation configuration - Professional Design
  */
 
 import React, { useEffect } from 'react';
@@ -19,7 +19,7 @@ import {
 } from '../store/slices/authSlice';
 
 import { PageLoading } from '../../../shared/src/components/Loading';
-import { colors, spacing, typography, borderRadius } from '@wasil/shared';
+import { colors, spacing, typography, borderRadius, shadows } from '@wasil/shared';
 
 // Auth Screens
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
@@ -40,12 +40,50 @@ const Drawer = createDrawerNavigator();
 
 // Placeholder screen for development
 const PlaceholderScreen = ({ route }) => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-    <Text style={{ fontSize: 24, marginBottom: 8 }}>🚧</Text>
-    <Text style={{ fontSize: 18, fontWeight: '600', color: '#333' }}>{route.name}</Text>
-    <Text style={{ fontSize: 14, color: '#666', marginTop: 8 }}>Coming soon...</Text>
+  <View style={placeholderStyles.container}>
+    <View style={placeholderStyles.iconContainer}>
+      <View style={placeholderStyles.icon} />
+    </View>
+    <Text style={placeholderStyles.title}>{route.name}</Text>
+    <Text style={placeholderStyles.subtitle}>This feature is coming soon</Text>
   </View>
 );
+
+const placeholderStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    padding: spacing.xl,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+  },
+  title: {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: typography.fontSize.md,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+});
 
 // Auth Stack Navigator
 const AuthNavigator = () => {
@@ -96,12 +134,12 @@ const DrawerContent = ({ navigation }) => {
   const user = useSelector(selectUser);
 
   const menuItems = [
-    { icon: '🏠', label: 'Home', route: 'Home' },
-    { icon: '📜', label: 'Ride History', route: 'RideHistory' },
-    { icon: '💳', label: 'Payment Methods', route: 'PaymentMethods' },
-    { icon: '📍', label: 'Saved Places', route: 'SavedPlaces' },
-    { icon: '⚙️', label: 'Settings', route: 'Settings' },
-    { icon: '❓', label: 'Help & Support', route: 'Help' },
+    { icon: 'home', label: 'Home', route: 'Home' },
+    { icon: 'history', label: 'Ride History', route: 'RideHistory' },
+    { icon: 'payment', label: 'Payment Methods', route: 'PaymentMethods' },
+    { icon: 'location', label: 'Saved Places', route: 'SavedPlaces' },
+    { icon: 'settings', label: 'Settings', route: 'Settings' },
+    { icon: 'help', label: 'Help & Support', route: 'Help' },
   ];
 
   const handleNavigation = (route) => {
@@ -122,7 +160,24 @@ const DrawerContent = ({ navigation }) => {
     if (user?.first_name) {
       return user.first_name[0].toUpperCase();
     }
-    return '👤';
+    return 'R';
+  };
+
+  const renderIcon = (iconType) => {
+    const iconMap = {
+      home: <View style={drawerStyles.homeIcon} />,
+      history: <View style={drawerStyles.historyIcon} />,
+      payment: <View style={drawerStyles.paymentIcon} />,
+      location: <View style={drawerStyles.locationIcon} />,
+      settings: <View style={drawerStyles.settingsIcon} />,
+      help: <View style={drawerStyles.helpIcon} />,
+    };
+
+    return (
+      <View style={drawerStyles.menuIconContainer}>
+        {iconMap[iconType] || <View style={drawerStyles.defaultIcon} />}
+      </View>
+    );
   };
 
   return (
@@ -132,6 +187,7 @@ const DrawerContent = ({ navigation }) => {
         <TouchableOpacity
           style={drawerStyles.profileSection}
           onPress={() => handleNavigation('Profile')}
+          activeOpacity={0.8}
         >
           <View style={drawerStyles.avatar}>
             <Text style={drawerStyles.avatarText}>{getInitials()}</Text>
@@ -143,7 +199,8 @@ const DrawerContent = ({ navigation }) => {
             <Text style={drawerStyles.phone}>{user?.phone || ''}</Text>
             {user?.rating && (
               <View style={drawerStyles.ratingBadge}>
-                <Text style={drawerStyles.ratingText}>⭐ {user.rating.toFixed(1)}</Text>
+                <View style={drawerStyles.starIconSmall} />
+                <Text style={drawerStyles.ratingText}>{user.rating.toFixed(1)}</Text>
               </View>
             )}
           </View>
@@ -151,8 +208,9 @@ const DrawerContent = ({ navigation }) => {
         <TouchableOpacity
           style={drawerStyles.editButton}
           onPress={() => handleNavigation('Profile')}
+          activeOpacity={0.8}
         >
-          <Text style={drawerStyles.editText}>Edit</Text>
+          <View style={drawerStyles.editIcon} />
         </TouchableOpacity>
       </View>
 
@@ -163,17 +221,25 @@ const DrawerContent = ({ navigation }) => {
             key={index}
             style={drawerStyles.menuItem}
             onPress={() => handleNavigation(item.route)}
+            activeOpacity={0.7}
           >
-            <Text style={drawerStyles.menuIcon}>{item.icon}</Text>
+            {renderIcon(item.icon)}
             <Text style={drawerStyles.menuLabel}>{item.label}</Text>
+            <View style={drawerStyles.chevronRight} />
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Footer */}
       <View style={drawerStyles.footer}>
-        <TouchableOpacity style={drawerStyles.logoutButton} onPress={handleLogout}>
-          <Text style={drawerStyles.logoutIcon}>🚪</Text>
+        <TouchableOpacity 
+          style={drawerStyles.logoutButton} 
+          onPress={handleLogout}
+          activeOpacity={0.7}
+        >
+          <View style={drawerStyles.logoutIconContainer}>
+            <View style={drawerStyles.logoutIcon} />
+          </View>
           <Text style={drawerStyles.logoutText}>Logout</Text>
         </TouchableOpacity>
         <Text style={drawerStyles.version}>Wasil Rider v1.0.0</Text>
@@ -187,10 +253,13 @@ const drawerStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
+
+  // Header
   header: {
     backgroundColor: colors.primary,
-    padding: spacing.lg,
-    paddingTop: 60,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing['3xl'] + spacing.xl,
+    paddingBottom: spacing.xl,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -201,17 +270,18 @@ const drawerStyles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.base,
+    marginRight: spacing.md,
+    ...shadows.md,
   },
   avatarText: {
-    fontSize: 24,
-    fontWeight: typography.fontWeight.bold,
+    fontSize: 28,
+    fontWeight: '800',
     color: colors.primary,
   },
   profileInfo: {
@@ -219,35 +289,58 @@ const drawerStyles = StyleSheet.create({
   },
   name: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: '700',
     color: colors.white,
+    marginBottom: 2,
+    letterSpacing: -0.2,
   },
   phone: {
     fontSize: typography.fontSize.sm,
     color: colors.white,
-    opacity: 0.8,
-    marginTop: 2,
+    opacity: 0.9,
+    fontWeight: '500',
   },
   ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: spacing.xs,
-    alignSelf: 'flex-start',
+  },
+  starIconSmall: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderBottomWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#FCD34D',
+    transform: [{ rotate: '35deg' }],
+    marginRight: spacing.xs,
   },
   ratingText: {
     fontSize: typography.fontSize.sm,
     color: colors.white,
-    fontWeight: typography.fontWeight.medium,
+    fontWeight: '700',
   },
   editButton: {
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: borderRadius.full,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  editText: {
-    color: colors.white,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
+  editIcon: {
+    width: 14,
+    height: 14,
+    borderWidth: 1.5,
+    borderColor: colors.white,
+    borderRadius: 2,
   },
+
+  // Menu
   menu: {
     flex: 1,
     paddingTop: spacing.lg,
@@ -257,42 +350,130 @@ const drawerStyles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.base,
     paddingHorizontal: spacing.xl,
+    marginHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
   },
-  menuIcon: {
-    fontSize: 22,
-    marginRight: spacing.base,
-    width: 30,
-    textAlign: 'center',
+  menuIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
   },
   menuLabel: {
-    fontSize: typography.fontSize.base,
-    color: colors.text,
-    fontWeight: typography.fontWeight.medium,
+    flex: 1,
+    fontSize: typography.fontSize.md,
+    color: '#374151',
+    fontWeight: '600',
   },
+  chevronRight: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderLeftWidth: 7,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#D1D5DB',
+  },
+
+  // Menu Icons
+  homeIcon: {
+    width: 20,
+    height: 18,
+    backgroundColor: colors.primary,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+  },
+  historyIcon: {
+    width: 18,
+    height: 18,
+    borderRadius: 2,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  paymentIcon: {
+    width: 18,
+    height: 14,
+    backgroundColor: colors.primary,
+    borderRadius: 2,
+  },
+  locationIcon: {
+    width: 14,
+    height: 20,
+    borderRadius: 7,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderBottomWidth: 0,
+  },
+  settingsIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  helpIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  defaultIcon: {
+    width: 18,
+    height: 18,
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+  },
+
+  // Footer
   footer: {
     padding: spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: '#F3F4F6',
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.md,
   },
+  logoutIconContainer: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
   logoutIcon: {
-    fontSize: 20,
-    marginRight: spacing.base,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 7,
+    borderBottomWidth: 7,
+    borderLeftWidth: 10,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#EF4444',
   },
   logoutText: {
-    fontSize: typography.fontSize.base,
-    color: colors.error,
-    fontWeight: typography.fontWeight.medium,
+    fontSize: typography.fontSize.md,
+    color: '#EF4444',
+    fontWeight: '600',
   },
   version: {
     fontSize: typography.fontSize.xs,
-    color: colors.textMuted,
-    marginTop: spacing.lg,
+    color: '#9CA3AF',
+    marginTop: spacing.md,
     textAlign: 'center',
+    fontWeight: '500',
   },
 });
 
