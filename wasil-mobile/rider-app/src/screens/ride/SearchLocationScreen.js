@@ -1,8 +1,7 @@
 /**
  * Wasil Rider - Search Location Screen
- * Google Places autocomplete for pickup/dropoff
+ * Google Places autocomplete for pickup/dropoff - Professional Design
  */
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -33,14 +32,14 @@ const JUBA_BOUNDS = {
 
 // Popular/Saved places
 const SAVED_PLACES = [
-  { id: 'current', icon: '📍', title: 'Current location', type: 'current' },
-  { id: 'set_map', icon: '🗺️', title: 'Set location on map', type: 'map' },
+  { id: 'current', icon: 'location', title: 'Current location', type: 'current' },
+  { id: 'set_map', icon: 'map', title: 'Set location on map', type: 'map' },
 ];
 
 const POPULAR_PLACES = [
   {
     id: 'juba_airport',
-    icon: '✈️',
+    icon: 'airport',
     title: 'Juba International Airport',
     address: 'Airport Road, Juba',
     latitude: 4.8721,
@@ -48,7 +47,7 @@ const POPULAR_PLACES = [
   },
   {
     id: 'custom_market',
-    icon: '🏪',
+    icon: 'market',
     title: 'Custom Market',
     address: 'Hai Custom, Juba',
     latitude: 4.8516,
@@ -56,7 +55,7 @@ const POPULAR_PLACES = [
   },
   {
     id: 'konyo_konyo',
-    icon: '🏬',
+    icon: 'shopping',
     title: 'Konyo Konyo Market',
     address: 'Konyo Konyo, Juba',
     latitude: 4.8468,
@@ -64,7 +63,7 @@ const POPULAR_PLACES = [
   },
   {
     id: 'university_juba',
-    icon: '🎓',
+    icon: 'education',
     title: 'University of Juba',
     address: 'University Road, Juba',
     latitude: 4.8667,
@@ -72,7 +71,7 @@ const POPULAR_PLACES = [
   },
   {
     id: 'juba_teaching_hospital',
-    icon: '🏥',
+    icon: 'hospital',
     title: 'Juba Teaching Hospital',
     address: 'Hai Malakal, Juba',
     latitude: 4.8580,
@@ -100,14 +99,23 @@ const SearchLocationScreen = ({ navigation, route }) => {
   const dropoffInputRef = useRef(null);
   const searchTimeout = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     // Entrance animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 40,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     // Focus the correct input
     setTimeout(() => {
@@ -137,6 +145,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
       const mockResults = [
         {
           id: '1',
+          icon: 'location',
           title: query + ' Street, Juba',
           address: 'Near ' + query + ', Juba, South Sudan',
           latitude: 4.8594 + Math.random() * 0.02,
@@ -144,6 +153,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
         },
         {
           id: '2',
+          icon: 'location',
           title: query + ' Area',
           address: query + ' District, Juba',
           latitude: 4.8594 + Math.random() * 0.02,
@@ -151,6 +161,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
         },
         {
           id: '3',
+          icon: 'location',
           title: query + ' Junction',
           address: 'Main Road, ' + query + ', Juba',
           latitude: 4.8594 + Math.random() * 0.02,
@@ -184,6 +195,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
+
     searchTimeout.current = setTimeout(() => {
       searchPlaces(text);
     }, 300);
@@ -216,7 +228,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
     // If both locations are set, go to confirm screen
     const newPickup = activeField === 'pickup' ? location : pickup;
     const newDropoff = activeField === 'dropoff' ? location : dropoff;
-
+    
     if (newPickup && newDropoff) {
       navigation.navigate('RideConfirm');
     }
@@ -241,6 +253,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
       dispatch(setDropoff(mockCurrentLocation));
       setDropoffText('Current Location');
     }
+
     setSearchResults([]);
   };
 
@@ -258,13 +271,34 @@ const SearchLocationScreen = ({ navigation, route }) => {
     setDropoffText(tempPickupText);
   };
 
+  const renderIcon = (iconType) => {
+    switch (iconType) {
+      case 'location':
+        return <View style={styles.locationIcon} />;
+      case 'map':
+        return <View style={styles.mapIcon} />;
+      case 'airport':
+        return <View style={styles.airportIcon} />;
+      case 'market':
+      case 'shopping':
+        return <View style={styles.marketIcon} />;
+      case 'education':
+        return <View style={styles.educationIcon} />;
+      case 'hospital':
+        return <View style={styles.hospitalIcon} />;
+      default:
+        return <View style={styles.locationIcon} />;
+    }
+  };
+
   const renderSearchItem = ({ item }) => (
     <TouchableOpacity
       style={styles.searchItem}
       onPress={() => handleSelectLocation(item)}
+      activeOpacity={0.7}
     >
-      <View style={styles.searchItemIcon}>
-        <Text style={styles.searchItemEmoji}>{item.icon || '📍'}</Text>
+      <View style={styles.searchItemIconContainer}>
+        {renderIcon(item.icon || 'location')}
       </View>
       <View style={styles.searchItemContent}>
         <Text style={styles.searchItemTitle} numberOfLines={1}>
@@ -273,6 +307,9 @@ const SearchLocationScreen = ({ navigation, route }) => {
         <Text style={styles.searchItemAddress} numberOfLines={1}>
           {item.address}
         </Text>
+      </View>
+      <View style={styles.chevronContainer}>
+        <View style={styles.chevronIcon} />
       </View>
     </TouchableOpacity>
   );
@@ -287,11 +324,15 @@ const SearchLocationScreen = ({ navigation, route }) => {
           handleSetOnMap();
         }
       }}
+      activeOpacity={0.7}
     >
-      <View style={styles.savedItemIcon}>
-        <Text style={styles.savedItemEmoji}>{item.icon}</Text>
+      <View style={styles.savedItemIconContainer}>
+        {renderIcon(item.icon)}
       </View>
       <Text style={styles.savedItemTitle}>{item.title}</Text>
+      <View style={styles.chevronContainer}>
+        <View style={styles.chevronIcon} />
+      </View>
     </TouchableOpacity>
   );
 
@@ -300,23 +341,33 @@ const SearchLocationScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+      <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         {/* Header with inputs */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
           >
-            <Text style={styles.backIcon}>←</Text>
+            <View style={styles.backArrow} />
           </TouchableOpacity>
 
           <View style={styles.inputsContainer}>
             {/* Pickup Input */}
             <View style={styles.inputRow}>
-              <View style={styles.inputDot}>
+              <View style={styles.inputDotContainer}>
                 <View style={styles.pickupDot} />
+                <View style={styles.pickupRing} />
               </View>
               <TextInput
                 ref={pickupInputRef}
@@ -328,9 +379,21 @@ const SearchLocationScreen = ({ navigation, route }) => {
                 onChangeText={(text) => handleSearchChange(text, 'pickup')}
                 onFocus={() => setActiveField('pickup')}
                 placeholder={t('ride.pickupPlaceholder', { defaultValue: 'Pickup location' })}
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor="#9CA3AF"
                 returnKeyType="next"
               />
+              {pickupText.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearButton}
+                  onPress={() => {
+                    setPickupText('');
+                    dispatch(setPickup(null));
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.clearIcon} />
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Connector Line */}
@@ -340,8 +403,8 @@ const SearchLocationScreen = ({ navigation, route }) => {
 
             {/* Dropoff Input */}
             <View style={styles.inputRow}>
-              <View style={styles.inputDot}>
-                <View style={styles.dropoffDot} />
+              <View style={styles.inputDotContainer}>
+                <View style={styles.dropoffSquare} />
               </View>
               <TextInput
                 ref={dropoffInputRef}
@@ -353,25 +416,42 @@ const SearchLocationScreen = ({ navigation, route }) => {
                 onChangeText={(text) => handleSearchChange(text, 'dropoff')}
                 onFocus={() => setActiveField('dropoff')}
                 placeholder={t('ride.dropoffPlaceholder', { defaultValue: 'Where to?' })}
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor="#9CA3AF"
                 returnKeyType="search"
               />
+              {dropoffText.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearButton}
+                  onPress={() => {
+                    setDropoffText('');
+                    dispatch(setDropoff(null));
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.clearIcon} />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
           {/* Swap Button */}
-          <TouchableOpacity
-            style={styles.swapButton}
-            onPress={handleSwapLocations}
-          >
-            <Text style={styles.swapIcon}>⇅</Text>
-          </TouchableOpacity>
+          {pickupText && dropoffText && (
+            <TouchableOpacity
+              style={styles.swapButton}
+              onPress={handleSwapLocations}
+              activeOpacity={0.8}
+            >
+              <View style={styles.swapIconTop} />
+              <View style={styles.swapIconBottom} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Search Results */}
         {isSearching ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={colors.primary} />
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Searching...</Text>
           </View>
         ) : showResults ? (
           <FlatList
@@ -380,10 +460,13 @@ const SearchLocationScreen = ({ navigation, route }) => {
             renderItem={renderSearchItem}
             contentContainerStyle={styles.resultsList}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={styles.emptyResults}>
+                <View style={styles.emptyIcon} />
+                <Text style={styles.emptyTitle}>No results found</Text>
                 <Text style={styles.emptyText}>
-                  {t('ride.noResults', { defaultValue: 'No results found' })}
+                  Try a different search term
                 </Text>
               </View>
             }
@@ -400,7 +483,9 @@ const SearchLocationScreen = ({ navigation, route }) => {
             renderItem={({ item }) => {
               if (item.type === 'header') {
                 return (
-                  <Text style={styles.sectionHeader}>{item.title}</Text>
+                  <View style={styles.sectionHeaderContainer}>
+                    <Text style={styles.sectionHeader}>{item.title}</Text>
+                  </View>
                 );
               }
               if (item.type === 'saved') {
@@ -410,6 +495,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
             }}
             contentContainerStyle={styles.resultsList}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           />
         )}
       </Animated.View>
@@ -420,7 +506,7 @@ const SearchLocationScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -430,24 +516,33 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.white,
+    borderBottomColor: '#F3F4F6',
+    backgroundColor: '#FFFFFF',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.sm,
+    marginRight: spacing.md,
   },
-  backIcon: {
-    fontSize: 20,
-    color: colors.text,
+  backArrow: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 6,
+    borderBottomWidth: 6,
+    borderRightWidth: 10,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderRightColor: '#111827',
+    marginRight: 2,
   },
 
   // Inputs
@@ -457,9 +552,10 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    position: 'relative',
   },
-  inputDot: {
-    width: 24,
+  inputDotContainer: {
+    width: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -469,142 +565,284 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: colors.primary,
   },
-  dropoffDot: {
+  pickupRing: {
+    position: 'absolute',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: colors.primary + '40',
+  },
+  dropoffSquare: {
     width: 10,
     height: 10,
-    backgroundColor: colors.error,
+    backgroundColor: '#EF4444',
+    borderRadius: 2,
   },
   connector: {
-    marginLeft: 11,
-    height: 20,
+    marginLeft: 13,
+    height: 24,
     width: 2,
     justifyContent: 'center',
+    marginVertical: spacing.xs,
   },
   connectorLine: {
     flex: 1,
     width: 2,
-    backgroundColor: colors.border,
+    backgroundColor: '#E5E7EB',
   },
   input: {
     flex: 1,
-    height: 44,
-    paddingHorizontal: spacing.sm,
+    height: 48,
+    paddingHorizontal: spacing.base,
     fontSize: typography.fontSize.base,
-    color: colors.text,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    marginLeft: spacing.xs,
+    color: '#111827',
+    backgroundColor: '#F9FAFB',
+    borderRadius: borderRadius.xl,
+    marginLeft: spacing.sm,
+    fontWeight: '600',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   inputActive: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
     borderColor: colors.primary,
+    ...shadows.md,
+    elevation: 4,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: spacing.sm,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearIcon: {
+    width: 12,
+    height: 12,
+    transform: [{ rotate: '45deg' }],
   },
 
   // Swap Button
   swapButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: spacing.sm,
   },
-  swapIcon: {
-    fontSize: 18,
-    color: colors.text,
+  swapIconTop: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderBottomWidth: 7,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: colors.primary,
+    marginBottom: 2,
+  },
+  swapIconBottom: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 7,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: colors.primary,
+    marginTop: 2,
+  },
+
+  // Loading
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  loadingText: {
+    marginTop: spacing.base,
+    fontSize: typography.fontSize.base,
+    color: '#6B7280',
+    fontWeight: '600',
   },
 
   // Results List
   resultsList: {
     paddingVertical: spacing.md,
   },
-  loadingContainer: {
-    padding: spacing.xl,
-    alignItems: 'center',
-  },
 
   // Section Header
+  sectionHeaderContainer: {
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+  },
   sectionHeader: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.textMuted,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.surface,
+    fontSize: typography.fontSize.xs,
+    fontWeight: '800',
+    color: '#6B7280',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+  },
+
+  // Icons
+  locationIcon: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  mapIcon: {
+    width: 16,
+    height: 16,
+    backgroundColor: '#3B82F6',
+    borderRadius: 3,
+  },
+  airportIcon: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 14,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#10B981',
+    transform: [{ rotate: '0deg' }],
+  },
+  marketIcon: {
+    width: 16,
+    height: 14,
+    backgroundColor: '#F59E0B',
+    borderRadius: 2,
+  },
+  educationIcon: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+  },
+  hospitalIcon: {
+    width: 14,
+    height: 14,
+    backgroundColor: '#EF4444',
   },
 
   // Search Item
   searchItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.white,
+    paddingVertical: spacing.base,
+    paddingHorizontal: spacing.xl,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F9FAFB',
   },
-  searchItemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
+  searchItemIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.base,
-  },
-  searchItemEmoji: {
-    fontSize: 18,
   },
   searchItemContent: {
     flex: 1,
   },
   searchItemTitle: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 2,
   },
   searchItemAddress: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  chevronContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chevronIcon: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderLeftWidth: 7,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#D1D5DB',
   },
 
   // Saved Item
   savedItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.white,
+    paddingVertical: spacing.base,
+    paddingHorizontal: spacing.xl,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F9FAFB',
   },
-  savedItemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  savedItemIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.base,
   },
-  savedItemEmoji: {
-    fontSize: 18,
-  },
   savedItemTitle: {
+    flex: 1,
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#111827',
   },
 
   // Empty Results
   emptyResults: {
-    padding: spacing.xl,
+    flex: 1,
+    padding: spacing['3xl'],
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F3F4F6',
+    marginBottom: spacing.lg,
+  },
+  emptyTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: spacing.xs,
   },
   emptyText: {
     fontSize: typography.fontSize.base,
-    color: colors.textMuted,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
 });
 
