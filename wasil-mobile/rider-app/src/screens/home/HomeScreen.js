@@ -1,6 +1,6 @@
 /**
  * Wasil Rider - Home Screen
- * Main screen with map and ride request interface
+ * Main screen with map and ride request interface - Professional Design
  */
 
 import React, { useRef, useEffect, useState } from 'react';
@@ -58,6 +58,7 @@ const HomeScreen = ({ navigation }) => {
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyDrivers, setNearbyDrivers] = useState(MOCK_DRIVERS);
   const bottomSheetAnim = useRef(new Animated.Value(0)).current;
+  const searchBarAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Check for active ride on mount
@@ -69,10 +70,20 @@ const HomeScreen = ({ navigation }) => {
     // Animate bottom sheet in
     Animated.spring(bottomSheetAnim, {
       toValue: 1,
-      tension: 50,
+      tension: 40,
       friction: 8,
       useNativeDriver: true,
     }).start();
+
+    // Animate search bar
+    setTimeout(() => {
+      Animated.spring(searchBarAnim, {
+        toValue: 1,
+        tension: 40,
+        friction: 7,
+        useNativeDriver: true,
+      }).start();
+    }, 200);
   }, []);
 
   const getCurrentLocation = async () => {
@@ -124,6 +135,21 @@ const HomeScreen = ({ navigation }) => {
   // Determine what to show based on ride status
   const hasActiveRide = currentRide && rideStatus && !['completed', 'cancelled'].includes(rideStatus);
 
+  const getRideStatusInfo = () => {
+    switch (rideStatus) {
+      case 'requested':
+        return { text: 'Finding your driver...', icon: 'search' };
+      case 'accepted':
+        return { text: 'Driver is on the way', icon: 'car' };
+      case 'arriving':
+        return { text: 'Driver arriving at pickup', icon: 'location' };
+      case 'in_progress':
+        return { text: 'On the way to destination', icon: 'route' };
+      default:
+        return { text: '', icon: null };
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
@@ -145,58 +171,100 @@ const HomeScreen = ({ navigation }) => {
       />
 
       {/* Top Bar */}
-      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+      <Animated.View 
+        style={[
+          styles.topBar, 
+          { 
+            paddingTop: insets.top + spacing.sm,
+            opacity: searchBarAnim,
+            transform: [{
+              translateY: searchBarAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-20, 0],
+              }),
+            }],
+          }
+        ]}
+      >
         {/* Menu Button */}
         <TouchableOpacity
           style={styles.menuButton}
           onPress={handleOpenDrawer}
+          activeOpacity={0.8}
         >
-          <Text style={styles.menuIcon}>☰</Text>
+          <View style={styles.menuIconContainer}>
+            <View style={styles.menuLine} />
+            <View style={styles.menuLine} />
+            <View style={styles.menuLine} />
+          </View>
         </TouchableOpacity>
 
         {/* Search Bar (for dropoff) */}
         <TouchableOpacity
           style={styles.searchBar}
           onPress={() => handleSearchPress('dropoff')}
+          activeOpacity={0.9}
         >
-          <Text style={styles.searchIcon}>🔍</Text>
+          <View style={styles.searchIconContainer}>
+            <View style={styles.searchIcon} />
+          </View>
           <Text style={styles.searchPlaceholder}>
             {t('home.whereToGo', { defaultValue: 'Where to?' })}
           </Text>
         </TouchableOpacity>
 
-        {/* SOS Button */}
+        {/* Profile/Notification Button */}
         <TouchableOpacity
-          style={styles.sosButton}
-          onPress={handleSOSPress}
+          style={styles.profileButton}
+          onPress={handleOpenDrawer}
+          activeOpacity={0.8}
         >
-          <Text style={styles.sosIcon}>🆘</Text>
+          <View style={styles.profileIcon}>
+            <Text style={styles.profileInitial}>
+              {user?.first_name?.[0]?.toUpperCase() || 'U'}
+            </Text>
+          </View>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {/* My Location Button */}
       <TouchableOpacity
-        style={[styles.myLocationButton, { bottom: 260 + insets.bottom }]}
+        style={[styles.myLocationButton, { bottom: 300 + insets.bottom }]}
         onPress={handleMyLocation}
+        activeOpacity={0.8}
       >
-        <Text style={styles.myLocationIcon}>◎</Text>
+        <View style={styles.targetIcon} />
+      </TouchableOpacity>
+
+      {/* SOS Button */}
+      <TouchableOpacity
+        style={[styles.sosButton, { bottom: 360 + insets.bottom }]}
+        onPress={handleSOSPress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.sosIconContainer}>
+          <View style={styles.sosExclamation} />
+        </View>
       </TouchableOpacity>
 
       {/* Bottom Sheet */}
       <Animated.View
         style={[
           styles.bottomSheet,
-          { paddingBottom: insets.bottom + spacing.md },
+          { paddingBottom: insets.bottom + spacing.lg },
           {
             transform: [{
               translateY: bottomSheetAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [300, 0],
+                outputRange: [400, 0],
               }),
             }],
           },
         ]}
       >
+        {/* Handle */}
+        <View style={styles.sheetHandle} />
+
         {!hasActiveRide ? (
           /* Default: Show destination selection */
           <>
@@ -214,9 +282,11 @@ const HomeScreen = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.locationRow}
                 onPress={() => handleSearchPress('pickup')}
+                activeOpacity={0.7}
               >
-                <View style={styles.locationDot}>
+                <View style={styles.locationIconContainer}>
                   <View style={styles.pickupDot} />
+                  <View style={styles.pickupRing} />
                 </View>
                 <View style={styles.locationTextContainer}>
                   <Text style={styles.locationLabel}>
@@ -226,25 +296,24 @@ const HomeScreen = ({ navigation }) => {
                     {pickup?.address || t('ride.currentLocation', { defaultValue: 'Current location' })}
                   </Text>
                 </View>
-                <Text style={styles.editIcon}>✏️</Text>
+                <View style={styles.editIconContainer}>
+                  <View style={styles.editIcon} />
+                </View>
               </TouchableOpacity>
 
               {/* Connector */}
               <View style={styles.connector}>
-                <View style={styles.connectorDots}>
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
-                </View>
+                <View style={styles.connectorLine} />
               </View>
 
               {/* Dropoff */}
               <TouchableOpacity
                 style={styles.locationRow}
                 onPress={() => handleSearchPress('dropoff')}
+                activeOpacity={0.7}
               >
-                <View style={styles.locationDot}>
-                  <View style={styles.dropoffDot} />
+                <View style={styles.locationIconContainer}>
+                  <View style={styles.dropoffSquare} />
                 </View>
                 <View style={styles.locationTextContainer}>
                   <Text style={styles.locationLabel}>
@@ -260,39 +329,87 @@ const HomeScreen = ({ navigation }) => {
                     {dropoff?.address || t('ride.whereTo', { defaultValue: 'Where do you want to go?' })}
                   </Text>
                 </View>
-                <Text style={styles.arrowIcon}>→</Text>
+                <View style={styles.arrowIconContainer}>
+                  <View style={styles.arrowIcon} />
+                </View>
               </TouchableOpacity>
             </View>
 
-            {/* Quick Destinations */}
-            <View style={styles.quickDestinations}>
-              <Text style={styles.quickTitle}>
-                {t('home.recentPlaces', { defaultValue: 'Recent places' })}
-              </Text>
-              <View style={styles.quickList}>
-                <TouchableOpacity style={styles.quickItem}>
-                  <View style={styles.quickIcon}>
-                    <Text>🏠</Text>
-                  </View>
-                  <Text style={styles.quickLabel}>Home</Text>
+            {/* Quick Actions */}
+            <View style={styles.quickActions}>
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: colors.primary + '15' }]}>
+                  <View style={styles.clockIcon} />
+                </View>
+                <Text style={styles.quickActionLabel}>Schedule</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: '#FEF3C7' }]}>
+                  <View style={styles.packageIcon} />
+                </View>
+                <Text style={styles.quickActionLabel}>Package</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: '#DBEAFE' }]}>
+                  <View style={styles.rentIcon} />
+                </View>
+                <Text style={styles.quickActionLabel}>Rent</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Saved Places */}
+            <View style={styles.savedPlaces}>
+              <View style={styles.savedPlacesHeader}>
+                <Text style={styles.savedPlacesTitle}>
+                  {t('home.savedPlaces', { defaultValue: 'Saved places' })}
+                </Text>
+                <TouchableOpacity activeOpacity={0.7}>
+                  <Text style={styles.seeAllText}>See all</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.quickItem}>
-                  <View style={styles.quickIcon}>
-                    <Text>💼</Text>
+              </View>
+              
+              <View style={styles.savedPlacesList}>
+                <TouchableOpacity 
+                  style={styles.savedPlaceItem}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.savedPlaceIcon, { backgroundColor: colors.primary + '15' }]}>
+                    <View style={styles.homeIcon} />
                   </View>
-                  <Text style={styles.quickLabel}>Work</Text>
+                  <View style={styles.savedPlaceInfo}>
+                    <Text style={styles.savedPlaceLabel}>Home</Text>
+                    <Text style={styles.savedPlaceAddress} numberOfLines={1}>
+                      Add your home address
+                    </Text>
+                  </View>
+                  <View style={styles.chevronRight} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.quickItem}>
-                  <View style={styles.quickIcon}>
-                    <Text>✈️</Text>
+
+                <TouchableOpacity 
+                  style={styles.savedPlaceItem}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.savedPlaceIcon, { backgroundColor: '#FEF3C7' }]}>
+                    <View style={styles.workIcon} />
                   </View>
-                  <Text style={styles.quickLabel}>Airport</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.quickItem}>
-                  <View style={styles.quickIcon}>
-                    <Text>🏪</Text>
+                  <View style={styles.savedPlaceInfo}>
+                    <Text style={styles.savedPlaceLabel}>Work</Text>
+                    <Text style={styles.savedPlaceAddress} numberOfLines={1}>
+                      Add your work address
+                    </Text>
                   </View>
-                  <Text style={styles.quickLabel}>Market</Text>
+                  <View style={styles.chevronRight} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -300,17 +417,23 @@ const HomeScreen = ({ navigation }) => {
         ) : (
           /* Active Ride: Show ride status */
           <View style={styles.activeRideSection}>
-            <Text style={styles.rideStatusText}>
-              {rideStatus === 'requested' && '🔍 Finding your driver...'}
-              {rideStatus === 'accepted' && '🚗 Driver is on the way'}
-              {rideStatus === 'arriving' && '📍 Driver arriving at pickup'}
-              {rideStatus === 'in_progress' && '🚗 On the way to destination'}
-            </Text>
+            <View style={styles.rideStatusContainer}>
+              <View style={styles.statusIndicator}>
+                <View style={styles.statusPulse} />
+                <View style={styles.statusDot} />
+              </View>
+              <Text style={styles.rideStatusText}>
+                {getRideStatusInfo().text}
+              </Text>
+            </View>
+            
             <TouchableOpacity
               style={styles.viewRideButton}
               onPress={() => navigation.navigate('RideTracking')}
+              activeOpacity={0.8}
             >
               <Text style={styles.viewRideText}>View Ride Details</Text>
+              <View style={styles.buttonArrow} />
             </TouchableOpacity>
           </View>
         )}
@@ -322,7 +445,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F8F9FA',
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -336,71 +459,130 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
     zIndex: 100,
   },
   menuButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.white,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    ...shadows.lg,
+    elevation: 8,
   },
-  menuIcon: {
-    fontSize: 20,
-    color: colors.text,
+  menuIconContainer: {
+    width: 20,
+    height: 14,
+    justifyContent: 'space-between',
+  },
+  menuLine: {
+    width: '100%',
+    height: 2,
+    backgroundColor: '#111827',
+    borderRadius: 1,
   },
   searchBar: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.full,
-    marginHorizontal: spacing.sm,
-    paddingHorizontal: spacing.base,
-    height: 44,
-    ...shadows.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius['2xl'],
+    marginHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
+    height: 48,
+    ...shadows.lg,
+    elevation: 8,
+  },
+  searchIconContainer: {
+    width: 20,
+    height: 20,
+    marginRight: spacing.md,
   },
   searchIcon: {
-    fontSize: 16,
-    marginRight: spacing.sm,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#6B7280',
   },
   searchPlaceholder: {
     fontSize: typography.fontSize.base,
-    color: colors.textMuted,
+    color: '#9CA3AF',
     flex: 1,
+    fontWeight: '600',
   },
-  sosButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.error,
+  profileButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    ...shadows.lg,
+    elevation: 8,
   },
-  sosIcon: {
-    fontSize: 18,
+  profileIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileInitial: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 
   // My Location Button
   myLocationButton: {
     position: 'absolute',
-    right: spacing.base,
+    right: spacing.lg,
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    ...shadows.lg,
+    elevation: 8,
   },
-  myLocationIcon: {
-    fontSize: 24,
-    color: colors.primary,
+  targetIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+
+  // SOS Button
+  sosButton: {
+    position: 'absolute',
+    right: spacing.lg,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.lg,
+    elevation: 8,
+  },
+  sosIconContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sosExclamation: {
+    width: 3,
+    height: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
   },
 
   // Bottom Sheet
@@ -409,12 +591,21 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    paddingTop: spacing.lg,
-    paddingHorizontal: spacing.lg,
-    ...shadows.lg,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: borderRadius['3xl'],
+    borderTopRightRadius: borderRadius['3xl'],
+    paddingTop: spacing.md,
+    paddingHorizontal: spacing.xl,
+    ...shadows.xl,
+    elevation: 20,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
   },
 
   // Greeting
@@ -423,143 +614,306 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: 2,
   },
   userName: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#111827',
+    letterSpacing: -0.5,
   },
 
   // Location Section
   locationSection: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
+    backgroundColor: '#F9FAFB',
+    borderRadius: borderRadius['2xl'],
+    padding: spacing.lg,
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
   },
-  locationDot: {
-    width: 24,
+  locationIconContainer: {
+    width: 32,
     justifyContent: 'center',
     alignItems: 'center',
   },
   pickupDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: colors.primary,
-    borderWidth: 2,
-    borderColor: colors.white,
   },
-  dropoffDot: {
-    width: 12,
-    height: 12,
-    backgroundColor: colors.error,
+  pickupRing: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.primary + '40',
+  },
+  dropoffSquare: {
+    width: 10,
+    height: 10,
+    backgroundColor: '#EF4444',
+    borderRadius: 2,
   },
   locationTextContainer: {
     flex: 1,
-    marginLeft: spacing.sm,
+    marginLeft: spacing.md,
   },
   locationLabel: {
     fontSize: typography.fontSize.xs,
-    color: colors.textMuted,
+    color: '#9CA3AF',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
+    fontWeight: '700',
   },
   locationText: {
     fontSize: typography.fontSize.base,
-    color: colors.text,
-    fontWeight: typography.fontWeight.medium,
+    color: '#111827',
+    fontWeight: '600',
   },
   locationPlaceholder: {
-    color: colors.textMuted,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
-  editIcon: {
-    fontSize: 14,
-    marginLeft: spacing.sm,
-  },
-  arrowIcon: {
-    fontSize: 18,
-    color: colors.primary,
-    marginLeft: spacing.sm,
-  },
-  connector: {
-    marginLeft: 11,
+  editIconContainer: {
+    width: 24,
     height: 24,
     justifyContent: 'center',
-  },
-  connectorDots: {
-    justifyContent: 'space-between',
-    height: 20,
-  },
-  dot: {
-    width: 2,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.border,
-    marginVertical: 2,
-  },
-
-  // Quick Destinations
-  quickDestinations: {
-    marginBottom: spacing.md,
-  },
-  quickTitle: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.textLight,
-    marginBottom: spacing.sm,
-  },
-  quickList: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickItem: {
     alignItems: 'center',
-    width: (width - 64) / 4,
   },
-  quickIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
+  editIcon: {
+    width: 14,
+    height: 14,
+    borderWidth: 1.5,
+    borderColor: '#9CA3AF',
+    borderRadius: 2,
+  },
+  arrowIconContainer: {
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.xs,
   },
-  quickLabel: {
+  arrowIcon: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderLeftWidth: 8,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: colors.primary,
+  },
+  connector: {
+    marginLeft: 15,
+    height: 24,
+    justifyContent: 'center',
+    marginVertical: spacing.xs,
+  },
+  connectorLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#E5E7EB',
+  },
+
+  // Quick Actions
+  quickActions: {
+    flexDirection: 'row',
+    marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  quickActionButton: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  clockIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  packageIcon: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#F59E0B',
+    borderRadius: 4,
+  },
+  rentIcon: {
+    width: 22,
+    height: 18,
+    backgroundColor: '#3B82F6',
+    borderRadius: 4,
+  },
+  quickActionLabel: {
     fontSize: typography.fontSize.xs,
-    color: colors.textLight,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+
+  // Saved Places
+  savedPlaces: {
+    marginBottom: spacing.md,
+  },
+  savedPlacesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  savedPlacesTitle: {
+    fontSize: typography.fontSize.base,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  seeAllText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  savedPlacesList: {
+    gap: spacing.sm,
+  },
+  savedPlaceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: spacing.base,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  savedPlaceIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  homeIcon: {
+    width: 18,
+    height: 16,
+    backgroundColor: colors.primary,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+  },
+  workIcon: {
+    width: 16,
+    height: 18,
+    backgroundColor: '#F59E0B',
+    borderRadius: 2,
+  },
+  savedPlaceInfo: {
+    flex: 1,
+  },
+  savedPlaceLabel: {
+    fontSize: typography.fontSize.md,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  savedPlaceAddress: {
+    fontSize: typography.fontSize.sm,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  chevronRight: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderLeftWidth: 7,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#D1D5DB',
   },
 
   // Active Ride Section
   activeRideSection: {
+    paddingVertical: spacing.xl,
+  },
+  rideStatusContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
+  statusIndicator: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  statusPulse: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+  },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
   },
   rideStatusText: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
-    marginBottom: spacing.base,
+    fontWeight: '700',
+    color: '#111827',
   },
   viewRideButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.full,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius['2xl'],
+    ...shadows.lg,
   },
   viewRideText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: '700',
+    marginRight: spacing.sm,
+  },
+  buttonArrow: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderLeftWidth: 8,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#FFFFFF',
   },
 });
 
 export default HomeScreen;
+
