@@ -1,8 +1,7 @@
 /**
  * Wasil Rider - Ride Confirm Screen
- * Select ride type, view fare estimate, and confirm ride
+ * Select ride type, view fare estimate, and confirm ride - Professional Design
  */
-
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
@@ -42,7 +41,7 @@ const RIDE_OPTIONS = [
   {
     id: 'boda',
     name: 'Boda Boda',
-    icon: '🏍️',
+    icon: 'motorcycle',
     description: 'Motorcycle, 1 person',
     multiplier: 0.8,
     eta: '2 min',
@@ -51,7 +50,7 @@ const RIDE_OPTIONS = [
   {
     id: 'standard',
     name: 'Standard',
-    icon: '🚗',
+    icon: 'car',
     description: 'Comfortable car, up to 4',
     multiplier: 1.0,
     eta: '4 min',
@@ -60,7 +59,7 @@ const RIDE_OPTIONS = [
   {
     id: 'premium',
     name: 'Premium',
-    icon: '🚙',
+    icon: 'premium',
     description: 'Luxury ride, up to 4',
     multiplier: 1.5,
     eta: '6 min',
@@ -70,9 +69,9 @@ const RIDE_OPTIONS = [
 
 // Payment options
 const PAYMENT_OPTIONS = [
-  { id: 'cash', name: 'Cash', icon: '💵' },
-  { id: 'mtn_money', name: 'MTN Money', icon: '📱' },
-  { id: 'zain_cash', name: 'Zain Cash', icon: '📱' },
+  { id: 'cash', name: 'Cash', icon: 'cash' },
+  { id: 'mtn_money', name: 'MTN Money', icon: 'mobile' },
+  { id: 'zain_cash', name: 'Zain Cash', icon: 'mobile' },
 ];
 
 const RideConfirmScreen = ({ navigation }) => {
@@ -90,6 +89,7 @@ const RideConfirmScreen = ({ navigation }) => {
   
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const paymentSheetAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Fetch fare estimate on mount
@@ -100,11 +100,24 @@ const RideConfirmScreen = ({ navigation }) => {
     // Animate in
     Animated.spring(slideAnim, {
       toValue: 1,
-      tension: 50,
+      tension: 40,
       friction: 8,
       useNativeDriver: true,
     }).start();
   }, []);
+
+  useEffect(() => {
+    if (showPaymentSheet) {
+      Animated.spring(paymentSheetAnim, {
+        toValue: 1,
+        tension: 40,
+        friction: 8,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      paymentSheetAnim.setValue(0);
+    }
+  }, [showPaymentSheet]);
 
   const handleSelectRideType = (rideType) => {
     dispatch(setRideType(rideType));
@@ -141,6 +154,32 @@ const RideConfirmScreen = ({ navigation }) => {
     return `${amount.toLocaleString()} SSP`;
   };
 
+  const renderRideIcon = (iconType, isSelected) => {
+    const iconColor = isSelected ? colors.primary : '#6B7280';
+    
+    switch (iconType) {
+      case 'motorcycle':
+        return <View style={[styles.motorcycleIcon, { backgroundColor: iconColor }]} />;
+      case 'car':
+        return <View style={[styles.carIcon, { backgroundColor: iconColor }]} />;
+      case 'premium':
+        return <View style={[styles.premiumIcon, { backgroundColor: iconColor }]} />;
+      default:
+        return <View style={[styles.carIcon, { backgroundColor: iconColor }]} />;
+    }
+  };
+
+  const renderPaymentIcon = (iconType) => {
+    switch (iconType) {
+      case 'cash':
+        return <View style={styles.cashIcon} />;
+      case 'mobile':
+        return <View style={styles.mobileIcon} />;
+      default:
+        return <View style={styles.cashIcon} />;
+    }
+  };
+
   // Mock route coordinates for demo
   const routeCoordinates = pickup && dropoff ? [
     { latitude: pickup.latitude, longitude: pickup.longitude },
@@ -167,8 +206,9 @@ const RideConfirmScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[styles.backButton, { top: insets.top + spacing.sm }]}
           onPress={() => navigation.goBack()}
+          activeOpacity={0.8}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <View style={styles.backArrow} />
         </TouchableOpacity>
       </View>
 
@@ -196,31 +236,58 @@ const RideConfirmScreen = ({ navigation }) => {
         >
           {/* Trip Summary */}
           <View style={styles.tripSummary}>
+            <View style={styles.tripHeader}>
+              <View style={styles.routeIconContainer}>
+                <View style={styles.routeIconCircle} />
+              </View>
+              <Text style={styles.tripHeaderText}>Trip Route</Text>
+            </View>
+
             <View style={styles.tripLocations}>
-              <View style={styles.locationItem}>
-                <View style={styles.pickupDot} />
+              <View style={styles.locationRow}>
+                <View style={styles.locationDotContainer}>
+                  <View style={styles.pickupDot} />
+                  <View style={styles.pickupRing} />
+                </View>
                 <Text style={styles.locationText} numberOfLines={1}>
                   {pickup?.address || 'Pickup'}
                 </Text>
               </View>
               <View style={styles.locationDivider} />
-              <View style={styles.locationItem}>
-                <View style={styles.dropoffDot} />
+              <View style={styles.locationRow}>
+                <View style={styles.locationDotContainer}>
+                  <View style={styles.dropoffSquare} />
+                </View>
                 <Text style={styles.locationText} numberOfLines={1}>
                   {dropoff?.address || 'Dropoff'}
                 </Text>
               </View>
             </View>
-            <Text style={styles.tripDistance}>
-              {fareEstimate?.distance ? `${fareEstimate.distance.toFixed(1)} km` : '--'}
-              {' • '}
-              {fareEstimate?.duration ? `${Math.round(fareEstimate.duration / 60)} min` : '--'}
-            </Text>
+
+            <View style={styles.tripMetrics}>
+              <View style={styles.metricItem}>
+                <View style={styles.metricIcon}>
+                  <View style={styles.distanceIconSmall} />
+                </View>
+                <Text style={styles.metricValue}>
+                  {fareEstimate?.distance ? `${fareEstimate.distance.toFixed(1)} km` : '--'}
+                </Text>
+              </View>
+              <View style={styles.metricDivider} />
+              <View style={styles.metricItem}>
+                <View style={styles.metricIcon}>
+                  <View style={styles.timeIconSmall} />
+                </View>
+                <Text style={styles.metricValue}>
+                  {fareEstimate?.duration ? `${Math.round(fareEstimate.duration / 60)} min` : '--'}
+                </Text>
+              </View>
+            </View>
           </View>
 
           {/* Ride Type Selection */}
           <Text style={styles.sectionTitle}>
-            {t('ride.selectRide', { defaultValue: 'Select your ride' })}
+            {t('ride.selectRide', { defaultValue: 'Choose your ride' })}
           </Text>
           
           <View style={styles.rideOptions}>
@@ -238,9 +305,16 @@ const RideConfirmScreen = ({ navigation }) => {
                     isSelected && styles.rideOptionSelected,
                   ]}
                   onPress={() => handleSelectRideType(option.id)}
+                  activeOpacity={0.8}
                 >
-                  <View style={styles.rideOptionLeft}>
-                    <Text style={styles.rideIcon}>{option.icon}</Text>
+                  <View style={styles.rideOptionContent}>
+                    <View style={[
+                      styles.rideIconContainer,
+                      isSelected && styles.rideIconContainerSelected,
+                    ]}>
+                      {renderRideIcon(option.icon, isSelected)}
+                    </View>
+                    
                     <View style={styles.rideInfo}>
                       <Text style={[
                         styles.rideName,
@@ -251,23 +325,31 @@ const RideConfirmScreen = ({ navigation }) => {
                       <Text style={styles.rideDescription}>
                         {option.description}
                       </Text>
-                      <Text style={styles.rideETA}>
-                        ⏱ {option.eta} away
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.rideOptionRight}>
-                    <Text style={[
-                      styles.rideFare,
-                      isSelected && styles.rideFareSelected,
-                    ]}>
-                      {typeof fare === 'number' ? formatCurrency(fare) : fare}
-                    </Text>
-                    {isSelected && (
-                      <View style={styles.selectedIndicator}>
-                        <Text style={styles.checkIcon}>✓</Text>
+                      <View style={styles.rideMetaRow}>
+                        <View style={styles.etaBadge}>
+                          <View style={styles.etaIcon} />
+                          <Text style={styles.rideETA}>{option.eta}</Text>
+                        </View>
+                        <View style={styles.capacityBadge}>
+                          <View style={styles.personIcon} />
+                          <Text style={styles.capacityText}>×{option.capacity}</Text>
+                        </View>
                       </View>
-                    )}
+                    </View>
+                    
+                    <View style={styles.rideOptionRight}>
+                      <Text style={[
+                        styles.rideFare,
+                        isSelected && styles.rideFareSelected,
+                      ]}>
+                        {typeof fare === 'number' ? formatCurrency(fare) : fare}
+                      </Text>
+                      {isSelected && (
+                        <View style={styles.selectedIndicator}>
+                          <View style={styles.checkIcon} />
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </TouchableOpacity>
               );
@@ -278,25 +360,32 @@ const RideConfirmScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.paymentSection}
             onPress={() => setShowPaymentSheet(true)}
+            activeOpacity={0.8}
           >
             <View style={styles.paymentLeft}>
-              <Text style={styles.paymentIcon}>
-                {PAYMENT_OPTIONS.find(p => p.id === paymentMethod)?.icon || '💵'}
-              </Text>
+              <View style={styles.paymentIconContainer}>
+                {renderPaymentIcon(PAYMENT_OPTIONS.find(p => p.id === paymentMethod)?.icon || 'cash')}
+              </View>
               <Text style={styles.paymentName}>
                 {PAYMENT_OPTIONS.find(p => p.id === paymentMethod)?.name || 'Cash'}
               </Text>
             </View>
-            <Text style={styles.paymentChange}>Change</Text>
+            <View style={styles.chevronContainer}>
+              <View style={styles.chevronRight} />
+            </View>
           </TouchableOpacity>
 
           {/* Promo Code */}
-          <TouchableOpacity style={styles.promoSection}>
-            <Text style={styles.promoIcon}>🎟️</Text>
+          <TouchableOpacity style={styles.promoSection} activeOpacity={0.8}>
+            <View style={styles.promoIconContainer}>
+              <View style={styles.promoIcon} />
+            </View>
             <Text style={styles.promoText}>
               {t('ride.addPromo', { defaultValue: 'Add promo code' })}
             </Text>
-            <Text style={styles.promoArrow}>→</Text>
+            <View style={styles.promoArrowContainer}>
+              <View style={styles.promoArrow} />
+            </View>
           </TouchableOpacity>
         </ScrollView>
 
@@ -324,9 +413,23 @@ const RideConfirmScreen = ({ navigation }) => {
           activeOpacity={1}
           onPress={() => setShowPaymentSheet(false)}
         >
-          <View style={[styles.paymentSheet, { paddingBottom: insets.bottom }]}>
+          <Animated.View 
+            style={[
+              styles.paymentSheet,
+              { 
+                paddingBottom: insets.bottom + spacing.lg,
+                transform: [{
+                  translateY: paymentSheetAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [300, 0],
+                  }),
+                }],
+              },
+            ]}
+          >
             <View style={styles.paymentSheetHandle} />
             <Text style={styles.paymentSheetTitle}>Payment Method</Text>
+            
             {PAYMENT_OPTIONS.map((option) => (
               <TouchableOpacity
                 key={option.id}
@@ -335,15 +438,20 @@ const RideConfirmScreen = ({ navigation }) => {
                   paymentMethod === option.id && styles.paymentOptionSelected,
                 ]}
                 onPress={() => handleSelectPayment(option.id)}
+                activeOpacity={0.8}
               >
-                <Text style={styles.paymentOptionIcon}>{option.icon}</Text>
+                <View style={styles.paymentOptionIconContainer}>
+                  {renderPaymentIcon(option.icon)}
+                </View>
                 <Text style={styles.paymentOptionName}>{option.name}</Text>
                 {paymentMethod === option.id && (
-                  <Text style={styles.paymentOptionCheck}>✓</Text>
+                  <View style={styles.paymentOptionCheck}>
+                    <View style={styles.paymentCheckIcon} />
+                  </View>
                 )}
               </TouchableOpacity>
             ))}
-          </View>
+          </Animated.View>
         </TouchableOpacity>
       )}
     </View>
@@ -353,7 +461,7 @@ const RideConfirmScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F8F9FA',
   },
 
   // Map
@@ -365,95 +473,181 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    left: spacing.base,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.white,
+    left: spacing.lg,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    ...shadows.lg,
+    elevation: 8,
   },
-  backIcon: {
-    fontSize: 22,
-    color: colors.text,
+  backArrow: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 6,
+    borderBottomWidth: 6,
+    borderRightWidth: 10,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderRightColor: '#111827',
+    marginRight: 2,
   },
 
   // Bottom Sheet
   bottomSheet: {
     flex: 1,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: borderRadius['3xl'],
+    borderTopRightRadius: borderRadius['3xl'],
     marginTop: -20,
-    ...shadows.lg,
+    ...shadows.xl,
+    elevation: 20,
   },
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.border,
+    backgroundColor: '#E5E7EB',
     borderRadius: 2,
     alignSelf: 'center',
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 100,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: 140,
   },
 
   // Trip Summary
   tripSummary: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.base,
-    marginBottom: spacing.lg,
+    backgroundColor: '#F9FAFB',
+    borderRadius: borderRadius['2xl'],
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  tripHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.base,
+  },
+  routeIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  routeIconCircle: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+  },
+  tripHeaderText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: '700',
+    color: '#111827',
   },
   tripLocations: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.base,
   },
-  locationItem: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.xs,
+  },
+  locationDotContainer: {
+    width: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
   },
   pickupDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: colors.primary,
-    marginRight: spacing.sm,
   },
-  dropoffDot: {
+  pickupRing: {
+    position: 'absolute',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: colors.primary + '40',
+  },
+  dropoffSquare: {
     width: 10,
     height: 10,
-    backgroundColor: colors.error,
-    marginRight: spacing.sm,
+    backgroundColor: '#EF4444',
+    borderRadius: 2,
   },
   locationDivider: {
     width: 2,
-    height: 16,
-    backgroundColor: colors.border,
-    marginLeft: 4,
+    height: 20,
+    backgroundColor: '#E5E7EB',
+    marginLeft: 11,
     marginVertical: 2,
   },
   locationText: {
     flex: 1,
     fontSize: typography.fontSize.sm,
-    color: colors.text,
+    color: '#111827',
+    fontWeight: '600',
   },
-  tripDistance: {
+  tripMetrics: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: spacing.base,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  metricItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metricIcon: {
+    marginRight: spacing.xs,
+  },
+  distanceIconSmall: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#3B82F6',
+  },
+  timeIconSmall: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+  },
+  metricValue: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
-    textAlign: 'center',
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  metricDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: spacing.base,
   },
 
   // Section Title
   sectionTitle: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
-    marginBottom: spacing.md,
+    fontSize: typography.fontSize.lg,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: spacing.base,
   },
 
   // Ride Options
@@ -461,36 +655,55 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   rideOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    borderRadius: borderRadius['2xl'],
     padding: spacing.base,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
     marginBottom: spacing.sm,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: '#F3F4F6',
   },
   rideOptionSelected: {
     borderColor: colors.primary,
     backgroundColor: colors.primary + '08',
   },
-  rideOptionLeft: {
+  rideOptionContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
-  rideIcon: {
-    fontSize: 32,
+  rideIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.xl,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.base,
+  },
+  rideIconContainerSelected: {
+    backgroundColor: colors.primary + '15',
+  },
+  motorcycleIcon: {
+    width: 28,
+    height: 20,
+    borderRadius: 4,
+  },
+  carIcon: {
+    width: 32,
+    height: 22,
+    borderRadius: 6,
+  },
+  premiumIcon: {
+    width: 36,
+    height: 24,
+    borderRadius: 8,
   },
   rideInfo: {
     flex: 1,
   },
   rideName: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 2,
   },
   rideNameSelected: {
@@ -498,37 +711,85 @@ const styles = StyleSheet.create({
   },
   rideDescription: {
     fontSize: typography.fontSize.sm,
-    color: colors.textLight,
-    marginBottom: 2,
+    color: '#6B7280',
+    marginBottom: spacing.xs,
+    fontWeight: '500',
+  },
+  rideMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  etaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  etaIcon: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#3B82F6',
+    marginRight: 4,
   },
   rideETA: {
     fontSize: typography.fontSize.xs,
-    color: colors.textMuted,
+    color: '#1E40AF',
+    fontWeight: '700',
+  },
+  capacityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  personIcon: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#6B7280',
+    marginRight: 3,
+  },
+  capacityText: {
+    fontSize: typography.fontSize.xs,
+    color: '#6B7280',
+    fontWeight: '700',
   },
   rideOptionRight: {
     alignItems: 'flex-end',
+    marginLeft: spacing.sm,
   },
   rideFare: {
     fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
+    fontWeight: '800',
+    color: '#111827',
     marginBottom: 4,
   },
   rideFareSelected: {
     color: colors.primary,
   },
   selectedIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkIcon: {
-    fontSize: 12,
-    color: colors.white,
-    fontWeight: typography.fontWeight.bold,
+    width: 12,
+    height: 8,
+    borderBottomWidth: 2.5,
+    borderLeftWidth: 2.5,
+    borderColor: '#FFFFFF',
+    transform: [{ rotate: '-45deg' }],
+    marginTop: -2,
   },
 
   // Payment Section
@@ -537,27 +798,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.base,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    backgroundColor: '#F9FAFB',
+    borderRadius: borderRadius.xl,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   paymentLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
-  paymentIcon: {
-    fontSize: 20,
-    marginRight: spacing.sm,
+  paymentIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  cashIcon: {
+    width: 20,
+    height: 16,
+    backgroundColor: '#10B981',
+    borderRadius: 3,
+  },
+  mobileIcon: {
+    width: 16,
+    height: 22,
+    backgroundColor: '#3B82F6',
+    borderRadius: 4,
   },
   paymentName: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#111827',
   },
-  paymentChange: {
-    fontSize: typography.fontSize.sm,
-    color: colors.primary,
-    fontWeight: typography.fontWeight.semibold,
+  chevronContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chevronRight: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderLeftWidth: 7,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#9CA3AF',
   },
 
   // Promo Section
@@ -565,21 +859,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.base,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    backgroundColor: '#FEF3C7',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  promoIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
   },
   promoIcon: {
-    fontSize: 20,
-    marginRight: spacing.sm,
+    width: 18,
+    height: 20,
+    backgroundColor: '#F59E0B',
+    borderRadius: 4,
   },
   promoText: {
     flex: 1,
     fontSize: typography.fontSize.base,
-    color: colors.textLight,
+    color: '#92400E',
+    fontWeight: '600',
+  },
+  promoArrowContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   promoArrow: {
-    fontSize: 16,
-    color: colors.primary,
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderLeftWidth: 7,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: '#F59E0B',
   },
 
   // Confirm Section
@@ -588,82 +910,105 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: spacing.lg,
-    backgroundColor: colors.white,
+    padding: spacing.xl,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: '#F3F4F6',
+    ...shadows.xl,
   },
   fareRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.base,
   },
   fareLabel: {
     fontSize: typography.fontSize.base,
-    color: colors.textLight,
+    color: '#6B7280',
+    fontWeight: '600',
   },
   fareAmount: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#111827',
+    letterSpacing: -0.5,
   },
 
   // Payment Sheet Overlay
   paymentOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   paymentSheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    padding: spacing.lg,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: borderRadius['3xl'],
+    borderTopRightRadius: borderRadius['3xl'],
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
   },
   paymentSheetHandle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.border,
+    backgroundColor: '#E5E7EB',
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   paymentSheetTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
+    fontSize: typography.fontSize.xl,
+    fontWeight: '800',
+    color: '#111827',
     marginBottom: spacing.lg,
-    textAlign: 'center',
+    letterSpacing: -0.5,
   },
   paymentOption: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.base,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     marginBottom: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 2,
+    borderColor: '#F3F4F6',
   },
   paymentOptionSelected: {
     backgroundColor: colors.primary + '15',
-    borderWidth: 1,
     borderColor: colors.primary,
   },
-  paymentOptionIcon: {
-    fontSize: 24,
+  paymentOptionIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.base,
   },
   paymentOptionName: {
     flex: 1,
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#111827',
   },
   paymentOptionCheck: {
-    fontSize: 18,
-    color: colors.primary,
-    fontWeight: typography.fontWeight.bold,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paymentCheckIcon: {
+    width: 14,
+    height: 10,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    borderColor: '#FFFFFF',
+    transform: [{ rotate: '-45deg' }],
+    marginTop: -2,
   },
 });
 
 export default RideConfirmScreen;
+
